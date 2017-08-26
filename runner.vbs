@@ -1,18 +1,1 @@
-'Create UFT object
-Set QTP = CreateObject("QuickTest.Application")
-QTP.Launch
-QTP.Visible = TRUE
- 
-'Open UFT Test
-QTP.Open "D:\Test Automation\Repository\GIT\GIT Test1_Feasibility\tagTest", TRUE
- 
-'Set Result location
-Set qtpResultsOpt = CreateObject("QuickTest.RunResultsOptions")
-qtpResultsOpt.ResultsLocation = "D:\Test Automation\Test Results"
- 
-'Run UFT test
-QTP.Test.Run qtpResultsOpt
- 
-'UFT QTP
-QTP.Test.Close
-QTP.Quit
+Dim strBasePath : strBasePath = left(WScript.ScriptFullName,(Len(WScript.ScriptFullName))-(len(WScript.ScriptName)))   'Kill the processes ConsoleOutputBlankLine(1) Call KillProcess("UFT.exe") Call KillProcess("QtpAutomationAgent.exe") Call KillProcess("iexplore.exe")   'Create QTP object ConsoleOutputBlankLine(1) Set QTP = CreateObject("QuickTest.Application") ConsoleOutput("Launching QTP Application") QTP.Launch QTP.Visible = TRUE  'Open QTP Test ConsoleOutput("Opening Test....") QTP.Open strBasePath & "\tagTest", TRUE 'Set the QTP test path   'Set Result location Set qtpResultsOpt = CreateObject("QuickTest.RunResultsOptions") qtpResultsOpt.ResultsLocation = strBasePath & "\output" 'Set the results location     'Create Environment Variables to pass the results from QTP to runner.vbs QTP.Test.Environment.Value("JenkinsFlag") = "N" QTP.Test.Environment.Value("JenkinsTestCaseDescription") = "" QTP.Test.Environment.Value("JenkinsTestCaseResult") = ""     'Set the Test Parameters 30 Set pDefColl = QTP.Test.ParameterDefinitions 31 Set qtpParams = pDefColl.GetParameters() 32   33 'Set the value for test environment through command line 34 On Error Resume Next 35 qtpParams.Item("env").Value = LCase(WScript.Arguments.Item(0)) 36 On Error GoTo 0 37   38 'Attach the vbs files to the test 39 QTP.Test.Settings.Resources.Libraries.RemoveAll   'Remove everything 40 QTP.Test.Settings.Resources.Libraries.Add("..\functions\TestInitialize.vbs") 41 QTP.Test.Settings.Resources.Libraries.Add("..\functions\Jenkins-Output.vbs") 42    43 'Run QTP test 44 ConsoleOutput("Starting to run....") 45 QTP.Test.Run qtpResultsOpt, FALSE, qtpParams 46   47 'Write the result in the console 48 ConsoleOutputBlankLine(2) 49 While QTP.Test.isRunning 50     If QTP.Test.Environment.Value("JenkinsFlag") = "Y" Then 51         QTP.Test.Environment.Value("JenkinsFlag") = "N" 52   53         ' Show TC ID and Description 54         WScript.StdOut.Write Time() & " :: " &  QTP.Test.Environment.Value("JenkinsTestCaseNumber") & " - " & QTP.Test.Environment.Value("JenkinsTestCaseDescription") & " - " 55   56         'Wait till the test is executed & result is updated 57         While (QTP.Test.Environment.Value("JenkinsTestCaseResult") = "" AND QTP.Test.isRunning) 58                 WScript.Sleep 1000 59         Wend 60   61         'Show the Result 62         WScript.StdOut.WriteLine QTP.Test.Environment.Value("JenkinsTestCaseResult") 63     End If 64     WScript.Sleep 1000 65 Wend 66 ConsoleOutputBlankLine(2) 67 'Close QTP 68 ConsoleOutput("Execution Completed Successfully!!!!!!!!!!") 69 QTP.Quit 70  71  72 Sub ConsoleOutput(ByVal MessageToBeDisplayed) 73  WScript.StdOut.WriteLine Time() & " :: " & MessageToBeDisplayed 74 End Sub 75  76 Sub ConsoleOutputBlankLine(ByVal intNo) 77  WScript.StdOut.WriteBlankLines(intNo) 78 End Sub 79  80 Sub KillProcess(ByVal ProcessName) 81   82  On Error Resume Next 83   84  Dim objWMIService : Set objWMIService = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2") 85  Dim colProcesses : Set colProcesses = objWMIService.ExecQuery("SELECT * FROM Win32_Process WHERE Name='" &  ProcessName & "'") 86  87  ConsoleOutput("Terminating Process : " & ProcessName) 88   89  For Each objProcess in colProcesses 90   intTermProc = objProcess.Terminate 91  Next 92   93  On Error GoTo 0 94   95 End Sub 
