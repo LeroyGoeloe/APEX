@@ -65,7 +65,7 @@ While QTP.Test.isRunning
 Wend
 ConsoleOutputBlankLine(2)
 'Close QTP
-ConsoleOutput("Execution Completed Successfully!!!!!!!!!!")
+ConsoleOutput("Execution Completed Successfully.")
 QTP.Quit
 
 
